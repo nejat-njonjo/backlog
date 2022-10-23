@@ -48,12 +48,21 @@ const cors = {
   credentials: true
 }
 
-RabbitMQ.consume().then(connection => {
-  console.log(connection)
-  connection.on('connection', listener => {
-    console.log('Redis connected')
-  })
-})
+const consume = async() => {
+  const server = await RabbitMQ.consume()
+  const ch1 = await server.createChannel()
+  await ch1.assertQueue('live')
+
+  ch1.consume('live', (msg) => {
+    if (msg !== null) {
+      ch1.ack(msg);
+    } else {
+      console.log('Consumer cancelled by server');
+    }
+  });
+}
+
+consume()
 
 /**
  * Socket.io server initialization
